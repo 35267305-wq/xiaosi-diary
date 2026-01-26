@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI 设置 - 小思日记</title>
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-pink: #FF9EAA;
+      --sky-blue: #A2D9FF;
+      --cream-bg: #FFF9F5;
+      --text-dark: #5A5A5A;
+      --purple: #C796FF;
+    }
+    body {
+      font-family: 'Ma Shan Zheng', cursive;
+      background-color: var(--cream-bg);
+      color: var(--text-dark);
+      padding: 20px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      color: var(--purple);
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1em;
+    }
+    button {
+      background-color: var(--main-pink);
+      color: #333;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .help {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 5px;
+    }
+    .status {
+      text-align: center;
+      margin-top: 15px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>⚙️ AI 设置</h1>
+  
+  <div class="form-group">
+    <label for="provider">选择 AI 模型</label>
+    <select id="provider">
+      <option value="moonshot">Moonshot（月之暗面）</option>
+      <option value="deepseek">DeepSeek（深度求索）</option>
+    </select>
+    <div class="help">推荐 Moonshot：中文长文本更强；DeepSeek：免费额度高</div>
+  </div>
+
+  <div class="form-group">
+    <label for="apiKey">API Key</label>
+    <input type="password" id="apiKey" placeholder="输入你的 API Key">
+    <div class="help">
+      <a href="https://platform.moonshot.cn" target="_blank">Moonshot 获取地址</a> | 
+      <a href="https://platform.deepseek.com" target="_blank">DeepSeek 获取地址</a>
+    </div>
+  </div>
+
+  <button onclick="saveSettings()">💾 保存设置</button>
+  <button onclick="clearSettings()" style="background:#ffcccc;">🗑️ 清除 API Key</button>
+
+  <div class="status" id="status"></div>
+
+  <script>
+    // 加载已有设置
+    window.onload = function() {
+      const config = JSON.parse(localStorage.getItem('ai_model_config') || '{}');
+      document.getElementById('provider').value = config.provider || 'moonshot';
+      document.getElementById('apiKey').value = config.api_key || '';
+    };
+
+    function saveSettings() {
+      const provider = document.getElementById('provider').value;
+      const apiKey = document.getElementById('apiKey').value.trim();
+
+      if (!apiKey) {
+        alert('请输入 API Key！');
+        return;
+      }
+
+      localStorage.setItem('ai_model_config', JSON.stringify({
+        provider,
+        api_key: apiKey
+      }));
+
+      document.getElementById('status').innerText = '✅ 设置已保存！';
+      setTimeout(() => window.close(), 1500);
+    }
+
+    function clearSettings() {
+      if (confirm('确定要清除 API Key 吗？')) {
+        localStorage.removeItem('ai_model_config');
+        document.getElementById('apiKey').value = '';
+        document.getElementById('status').innerText = '🗑️ 已清除';
+      }
+    }
+  </script>
+</body>
+</html>
