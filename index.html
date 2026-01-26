@@ -122,8 +122,36 @@
       display: none;
     }
 
-    .toggle-icon::after { content: " ▼"; }
-    .toggle-icon.open::after { content: " ▲"; }
+    .entry-item {
+      position: relative;
+      padding: 8px 0;
+      border-bottom: 1px dashed #eee;
+    }
+
+    .entry-time {
+      font-size: 0.8em;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .entry-actions {
+      position: absolute;
+      right: 0;
+      top: 8px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .edit-btn, .delete-btn {
+      padding: 2px 6px;
+      font-size: 0.8em;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .edit-btn { background: #d0e7ff; color: #0066cc; }
+    .delete-btn { background: #ffdada; color: #cc0000; }
   </style>
 </head>
 <body>
@@ -150,6 +178,20 @@
 
   <script>
     // ========== 工具函数 ==========
+    function getNow() {
+      return new Date().toISOString(); // ISO 8601 格式，如 "2026-01-26T14:30:00.000Z"
+    }
+
+    function formatDateTime(isoString) {
+      const date = new Date(isoString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hour = String(date.getHours()).padStart(2, '0');
+      const minute = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hour}:${minute}`;
+    }
+
     function getTodayKey() {
       return new Date().toISOString().split('T')[0];
     }
@@ -174,10 +216,17 @@
         return;
       }
 
-      const today = getTodayKey();
+      const now = getNow();
       let entries = JSON.parse(localStorage.getItem('diary_entries') || '{}');
+      const today = getTodayKey();
       if (!entries[today]) entries[today] = [];
-      entries[today].push(content);
+      
+      entries[today].push({
+        id: 'entry_' + Date.now(),
+        content,
+        timestamp: now
+      });
+      
       localStorage.setItem('diary_entries', JSON.stringify(entries));
 
       document.getElementById('input').value = '';
@@ -196,7 +245,7 @@
         return;
       }
 
-      const text = todayEntries.join('\n');
+      const text = todayEntries.map(e => e.content).join('\n');
       const prompt = `
 你是一位温暖又懂变现的创意伙伴。请根据用户今天的碎片想法，完成两件事：
 
@@ -209,7 +258,6 @@
 ${text}
 `;
 
-      // 从设置页读取模型和 API Key
       const modelConfig = JSON.parse(localStorage.getItem('ai_model_config') || '{}');
       const { provider = 'moonshot', api_key } = modelConfig;
 
@@ -234,7 +282,6 @@ ${text}
           max_tokens: 600
         });
       } else {
-        // 默认 Moonshot
         apiUrl = 'https://api.moonshot.cn/v1/chat/completions';
         model = 'moonshot-v1-8k';
         headers = {
@@ -290,6 +337,34 @@ ${text}
       }, 3000);
     }
 
+    // ========== 编辑 & 删除 ==========
+    function deleteEntry(dateKey, index) {
+      if (!confirm('确定要删除这条记录吗？')) return;
+      
+      let entries = JSON.parse(localStorage.getItem('diary_entries') || '{}');
+      entries[dateKey].splice(index, 1);
+      if (entries[dateKey].length === 0) {
+        delete entries[dateKey];
+      }
+      localStorage.setItem('diary_entries', JSON.stringify(entries));
+      renderHistory();
+      showStatus('已删除', 'red');
+    }
+
+    function editEntry(dateKey, index) {
+      let entries = JSON.parse(localStorage.getItem('diary_entries') || '{}');
+      const entry = entries[dateKey][index];
+      const newContent = prompt('编辑你的记录：', entry.content);
+      if (newContent !== null && newContent.trim() !== '') {
+        entries[dateKey][index].content = newContent.trim();
+        entries[dateKey][index].timestamp = getNow(); // 更新时间
+        localStorage.setItem('diary_entries', JSON.stringify(entries));
+        renderHistory();
+        showStatus('已更新', 'green');
+      }
+    }
+
+    // ========== 渲染历史记录 ==========
     function renderHistory() {
       const entries = JSON.parse(localStorage.getItem('diary_entries') || '{}');
       const sortedDates = Object.keys(entries).sort((a, b) => new Date(b) - new Date(a));
@@ -310,7 +385,20 @@ ${text}
 
         const entriesDiv = document.createElement('div');
         entriesDiv.className = 'history-entries';
-        entriesDiv.innerHTML = entries[date].map(e => `<div>• ${e}</div>`).join('<br>');
+
+        entries[date].forEach((entry, idx) => {
+          const item = document.createElement('div');
+          item.className = 'entry-item';
+          item.innerHTML = `
+            <div>${entry.content}</div>
+            <div class="entry-time">${formatDateTime(entry.timestamp)}</div>
+            <div class="entry-actions">
+              <button class="edit-btn" onclick="editEntry('${date}', ${idx})">✏️</button>
+              <button class="delete-btn" onclick="deleteEntry('${date}', ${idx})">🗑️</button>
+            </div>
+          `;
+          entriesDiv.appendChild(item);
+        });
 
         div.addEventListener('click', () => {
           div.classList.toggle('open');
@@ -326,7 +414,7 @@ ${text}
       const panel = document.getElementById('historyPanel');
       const isHidden = panel.style.display === 'none' || panel.style.display === '';
       panel.style.display = isHidden ? 'block' : 'none';
-      renderHistory();
+      if (isHidden) renderHistory();
     }
 
     window.onload = () => {
