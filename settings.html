@@ -1,125 +1,276 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI 设置 - 小思日记</title>
-  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --main-pink: #FF9EAA;
-      --sky-blue: #A2D9FF;
-      --cream-bg: #FFF9F5;
-      --text-dark: #5A5A5A;
-      --purple: #C796FF;
-    }
-    body {
-      font-family: 'Ma Shan Zheng', cursive;
-      background-color: var(--cream-bg);
-      color: var(--text-dark);
-      padding: 20px;
-      max-width: 500px;
-      margin: 0 auto;
-    }
-    h1 {
-      text-align: center;
-      color: var(--purple);
-      margin-bottom: 20px;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    select, input, button {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: 1em;
-    }
-    button {
-      background-color: var(--main-pink);
-      color: #333;
-      border: none;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    .help {
-      font-size: 0.9em;
-      color: #666;
-      margin-top: 5px;
-    }
-    .status {
-      text-align: center;
-      margin-top: 15px;
-      color: green;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API设置 | 小思日记</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            width: 100%;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .content { padding: 40px; }
+        .setting-item {
+            margin-bottom: 25px;
+        }
+        .setting-item label {
+            display: block;
+            color: #495057;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .setting-item input, .setting-item select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        .setting-item input:focus, .setting-item select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #e9ecef;
+            color: #495057;
+        }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-  <h1>⚙️ AI 设置</h1>
-  
-  <div class="form-group">
-    <label for="provider">选择 AI 模型</label>
-    <select id="provider">
-      <option value="moonshot">Moonshot（月之暗面）</option>
-      <option value="deepseek">DeepSeek（深度求索）</option>
-    </select>
-    <div class="help">推荐 Moonshot：中文长文本更强；DeepSeek：免费额度高</div>
-  </div>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="window.location.href='index.html'">⬅️ 返回</button>
+            <h1>⚙️ API设置</h1>
+            <p>配置你的AI服务，让小思更聪明</p>
+        </div>
 
-  <div class="form-group">
-    <label for="apiKey">API Key</label>
-    <input type="password" id="apiKey" placeholder="输入你的 API Key">
-    <div class="help">
-      <a href="https://platform.moonshot.cn" target="_blank">Moonshot 获取地址</a> | 
-      <a href="https://platform.deepseek.com" target="_blank">DeepSeek 获取地址</a>
+        <div class="content">
+            <div class="setting-item">
+                <label for="apiKey">🔑 API密钥</label>
+                <input type="password" id="apiKey" placeholder="请输入你的API密钥（如：sk-xxxx）">
+            </div>
+
+            <div class="setting-item">
+                <label for="apiModel">🤖 模型选择（重要！）</label>
+                <select id="apiModel">
+                    <option value="deepseek-chat">DeepSeek (推荐，国产免费)</option>
+                    <option value="moonshot-v1-8k">Moonshot (国产)</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 (OpenAI)</option>
+                    <option value="gpt-4">GPT-4 (OpenAI)</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <label for="apiUrl">🌐 API地址</label>
+                <input type="url" id="apiUrl" placeholder="自动填充，一般无需修改">
+            </div>
+
+            <div class="warning-box">
+                ⚠️ DeepSeek用户注意：模型名称必须是 <strong>deepseek-chat</strong>（不是deepseek）！
+            </div>
+
+            <button class="btn btn-primary" onclick="saveSettings()">💾 保存设置</button>
+            <button class="btn btn-secondary" onclick="testConnection()">🧪 测试连接</button>
+            <button class="btn btn-secondary" onclick="resetSettings()">🔄 重置为默认</button>
+
+            <div id="statusMessage"></div>
+
+            <div class="info-box">
+                <strong>💡 获取API密钥：</strong><br>
+                • DeepSeek: 访问 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a> → 免费注册 → 复制API Key<br>
+                • Moonshot: 访问 <a href="https://platform.moonshot.cn" target="_blank">platform.moonshot.cn</a><br>
+                • OpenAI: 访问 <a href="https://platform.openai.com" target="_blank">platform.openai.com</a>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <button onclick="saveSettings()">💾 保存设置</button>
-  <button onclick="clearSettings()" style="background:#ffcccc;">🗑️ 清除 API Key</button>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadSettings);
 
-  <div class="status" id="status"></div>
+        function loadSettings() {
+            const saved = localStorage.getItem('xiaosiSettings');
+            if (saved) {
+                const s = JSON.parse(saved);
+                document.getElementById('apiKey').value = s.apiKey || '';
+                document.getElementById('apiModel').value = s.apiModel || 'deepseek-chat';
+                document.getElementById('apiUrl').value = s.apiUrl || getDefaultUrl(s.apiModel || 'deepseek-chat');
+            } else {
+                document.getElementById('apiUrl').value = getDefaultUrl('deepseek-chat');
+            }
+        }
 
-  <script>
-    // 加载已有设置
-    window.onload = function() {
-      const config = JSON.parse(localStorage.getItem('ai_model_config') || '{}');
-      document.getElementById('provider').value = config.provider || 'moonshot';
-      document.getElementById('apiKey').value = config.api_key || '';
-    };
+        function getDefaultUrl(model) {
+            const urls = {
+                'deepseek-chat': 'https://api.deepseek.com/v1/chat/completions',
+                'moonshot-v1-8k': 'https://api.moonshot.cn/v1/chat/completions',
+                'gpt-3.5-turbo': 'https://api.openai.com/v1/chat/completions',
+                'gpt-4': 'https://api.openai.com/v1/chat/completions'
+            };
+            return urls[model] || urls['deepseek-chat'];
+        }
 
-    function saveSettings() {
-      const provider = document.getElementById('provider').value;
-      const apiKey = document.getElementById('apiKey').value.trim();
+        function saveSettings() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const apiModel = document.getElementById('apiModel').value;
+            const apiUrl = document.getElementById('apiUrl').value.trim();
 
-      if (!apiKey) {
-        alert('请输入 API Key！');
-        return;
-      }
+            if (!apiKey) {
+                showStatus('请先输入API密钥！', 'error');
+                return;
+            }
+            if (!apiUrl) {
+                showStatus('请先输入API地址！', 'error');
+                return;
+            }
 
-      localStorage.setItem('ai_model_config', JSON.stringify({
-        provider,
-        api_key: apiKey
-      }));
+            localStorage.setItem('xiaosiSettings', JSON.stringify({apiKey, apiModel, apiUrl}));
+            showStatus('✅ 设置保存成功！', 'success');
+        }
 
-      document.getElementById('status').innerText = '✅ 设置已保存！';
-      setTimeout(() => window.close(), 1500);
-    }
+        async function testConnection() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const apiModel = document.getElementById('apiModel').value;
+            const apiUrl = document.getElementById('apiUrl').value.trim();
 
-    function clearSettings() {
-      if (confirm('确定要清除 API Key 吗？')) {
-        localStorage.removeItem('ai_model_config');
-        document.getElementById('apiKey').value = '';
-        document.getElementById('status').innerText = '🗑️ 已清除';
-      }
-    }
-  </script>
+            if (!apiKey || !apiUrl) {
+                showStatus('请先配置API密钥和地址！', 'error');
+                return;
+            }
+
+            showStatus('🔄 正在测试连接...', 'success');
+
+            try {
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: apiModel,
+                        messages: [{role:'user',content:'你好，测试连接'}],
+                        max_tokens: 10
+                    })
+                });
+
+                const data = await res.json();
+                
+                if (res.ok && data.choices) {
+                    showStatus('✅ 连接成功！API配置正确', 'success');
+                } else {
+                    showStatus(`❌ 错误: ${data.error?.message || '未知错误'}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ 连接失败: ${error.message}`, 'error');
+            }
+        }
+
+        function resetSettings() {
+            if (confirm('确定要重置为默认设置吗？')) {
+                localStorage.removeItem('xiaosiSettings');
+                document.getElementById('apiKey').value = '';
+                document.getElementById('apiModel').value = 'deepseek-chat';
+                document.getElementById('apiUrl').value = getDefaultUrl('deepseek-chat');
+                showStatus('✅ 已重置为默认设置', 'success');
+            }
+        }
+
+        function showStatus(message, type) {
+            const div = document.getElementById('statusMessage');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            setTimeout(() => { 
+                div.innerHTML = ''; 
+                div.className = ''; 
+            }, 5000);
+        }
+
+        // 模型变化时自动更新API地址
+        document.getElementById('apiModel').addEventListener('change', function() {
+            document.getElementById('apiUrl').value = getDefaultUrl(this.value);
+        });
+    </script>
 </body>
 </html>
