@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>小思日记 | 每天记录，改变命运</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Microsoft YaHei', sans-serif;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
             background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 15px;
         }
         .container {
             max-width: 800px;
@@ -23,11 +27,20 @@
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px 20px;
+            padding: 25px 20px;
             text-align: center;
             position: relative;
         }
-        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .header h1 { font-size: 28px; margin-bottom: 8px; font-weight: bold; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .stats-bar {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 15px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        .stats-bar span { margin: 0 8px; }
         .settings-btn {
             position: absolute;
             top: 15px;
@@ -38,19 +51,61 @@
             padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
         }
-        .content { padding: 30px; }
+        .settings-btn:hover { background: rgba(255,255,255,0.3); }
+        
+        /* 标签切换 */
+        .tab-nav {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: bold;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .tab-btn.active {
+            color: #667eea;
+            background: white;
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+        }
+        .tab-content { display: none; padding: 25px; }
+        .tab-content.active { display: block; }
+
+        .content { padding: 0; }
         .record-section {
             background: #f8f9fa;
             padding: 20px;
-            border-radius: 15px;
+            border-radius: 0 0 15px 15px;
             margin-bottom: 20px;
             border: 2px solid #e9ecef;
+            border-top: none;
         }
         .record-section h2 {
             color: #667eea;
             margin-bottom: 15px;
             font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         textarea {
             width: 100%;
@@ -60,6 +115,8 @@
             border-radius: 10px;
             font-size: 16px;
             resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.3s;
         }
         textarea:focus {
             outline: none;
@@ -71,26 +128,190 @@
             margin-top: 15px;
         }
         .btn {
-            padding: 12px 25px;
+            padding: 12px 20px;
             border: none;
             border-radius: 25px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             flex: 1;
         }
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
         .btn-secondary {
             background: #e9ecef;
             color: #495057;
+        }
+        .btn-secondary:hover { background: #dee2e6; }
+        .btn-success {
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+            color: white;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        /* 历史记录样式 */
+        .history-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .date-picker {
+            flex: 1;
+            min-width: 150px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        .search-box {
+            flex: 2;
+            min-width: 200px;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            padding-left: 40px;
+            background: white url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%236c757d" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>') no-repeat 15px center;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .history-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .history-date {
+            font-size: 16px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        .history-record {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #ffc107;
+        }
+        .history-time {
+            color: #6c757d;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .history-content {
+            color: #212529;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        .history-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            justify-content: flex-end;
+        }
+        .record-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 15px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .edit-btn { background: #ffc107; color: #212529; }
+        .delete-btn { background: #dc3545; color: white; }
+        .view-btn { background: #17a2b8; color: white; }
+        .edit-btn:hover, .delete-btn:hover, .view-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* 月份视图 */
+        .month-view {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .month-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            background: white;
+            border: 1px solid #e9ecef;
+        }
+        .month-day:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .month-day.has-record {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .month-day.today {
+            border: 3px solid #ffc107;
+            background: white;
+            color: #667eea;
+        }
+        .month-day-name {
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+        .month-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .month-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .records-list {
+            margin-top: 0;
         }
         .records-list h2 {
             color: #667eea;
             margin-bottom: 20px;
             font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         .record-item {
             background: white;
@@ -99,6 +320,7 @@
             border-radius: 10px;
             border-left: 4px solid #667eea;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: relative;
         }
         .record-time {
             color: #6c757d;
@@ -111,23 +333,15 @@
             line-height: 1.6;
             margin-bottom: 15px;
             min-height: 60px;
+            word-break: break-word;
         }
         .record-actions {
             display: flex;
             gap: 10px;
             justify-content: flex-end;
         }
-        .record-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-        .edit-btn { background: #ffc107; color: #212529; }
-        .delete-btn { background: #dc3545; color: white; }
         .summary-section {
-            margin-top: 30px;
+            margin-top: 25px;
             padding: 20px;
             background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
             border-radius: 15px;
@@ -145,6 +359,7 @@
             min-height: 100px;
             margin-top: 10px;
             line-height: 1.6;
+            word-break: break-word;
         }
         .loading {
             text-align: center;
@@ -158,57 +373,281 @@
             padding: 40px 20px;
             font-size: 16px;
         }
+        .empty-state p { margin-top: 10px; }
+        .import-export-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            border-radius: 15px;
+            border: 2px solid #ffc107;
+        }
+        .import-export-section h2 {
+            color: #e67e22;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        .import-export-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .import-export-btns .btn {
+            flex: 1;
+            padding: 10px 15px;
+            font-size: 14px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .modal h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e9ecef;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .data-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .data-info p { margin: 8px 0; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-value { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+        .stat-label { font-size: 13px; opacity: 0.9; }
+        @media (max-width: 768px) {
+            .btn-group, .import-export-btns { flex-direction: column; }
+            .btn { width: 100%; }
+            .stats-bar { font-size: 12px; }
+            .history-controls { flex-direction: column; }
+            .month-view { grid-template-columns: repeat(7, 1fr); }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <button class="settings-btn" onclick="window.location.href='settings.html'">⚙️ API设置</button>
+            <button class="settings-btn" onclick="window.location.href='settings.html'">⚙️</button>
             <h1>✨ 小思日记 ✨</h1>
             <p>每天记录想法，让AI帮你找到可变现的路子</p>
+            <div class="stats-bar" id="statsBar">
+                <span>📝 记录: 0条</span>
+                <span>📅 最早: -</span>
+                <span>🆕 最新: -</span>
+            </div>
+        </div>
+
+        <!-- 标签切换 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('today')">📝 今日</button>
+            <button class="tab-btn" onclick="switchTab('history')">📚 历史</button>
+            <button class="tab-btn" onclick="switchTab('calendar')">📅 月份</button>
         </div>
 
         <div class="content">
-            <div class="record-section">
-                <h2>📝 记录此刻的想法</h2>
-                <textarea id="recordInput" placeholder="写下你的想法、灵感或感悟..."></textarea>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="saveRecord()">💾 保存记录</button>
-                    <button class="btn btn-secondary" onclick="clearInput()">🗑️ 清空</button>
+            <!-- 今日记录 -->
+            <div id="todayTab" class="tab-content active">
+                <div class="record-section">
+                    <h2>💡 记录此刻的想法</h2>
+                    <textarea id="recordInput" placeholder="写下你的想法、灵感或感悟..."></textarea>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="saveRecord()">
+                            <span>💾</span> 保存
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearInput()">
+                            <span>🗑️</span> 清空
+                        </button>
+                    </div>
+                </div>
+
+                <div class="summary-section">
+                    <h2>🤖 一键智能总结</h2>
+                    <button class="btn btn-primary" onclick="generateSummary()" style="width:100%;">
+                        <span>🚀</span> 生成今日总结与变现建议
+                    </button>
+                    <div id="summaryContent" class="summary-content">
+                        <p style="color:#6c757d;">点击按钮，AI将帮你分析今天的记录，生成可变现的内容建议...</p>
+                    </div>
+                    <div id="loading" class="loading" style="display:none;">🔄 AI正在思考中...</div>
+                </div>
+
+                <div class="import-export-section">
+                    <h2>💾 备份与恢复</h2>
+                    <p style="color:#212529; margin-bottom:15px;">定期备份数据，防止丢失</p>
+                    <div class="import-export-btns">
+                        <button class="btn btn-success" onclick="exportData()">
+                            <span>📤</span> 导出全部
+                        </button>
+                        <button class="btn btn-warning" onclick="document.getElementById('importFile').click()">
+                            <span>📥</span> 导入数据
+                        </button>
+                    </div>
+                    <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+                </div>
+
+                <div class="records-list">
+                    <h2>
+                        <span>📖 今日记录</span>
+                        <button class="btn btn-secondary" style="padding:6px 12px; font-size:13px;" onclick="clearAllRecords()">
+                            🗑️ 清空今日
+                        </button>
+                    </h2>
+                    <div id="todayRecordsContainer"></div>
                 </div>
             </div>
 
-            <div class="summary-section">
-                <h2>🤖 一键智能总结</h2>
-                <button class="btn btn-primary" onclick="generateSummary()" style="width:100%;">🚀 生成今日总结与变现建议</button>
-                <div id="summaryContent" class="summary-content">
-                    <p style="color:#6c757d;">点击按钮，AI将帮你分析今天的记录，生成可变现的内容建议...</p>
+            <!-- 历史记录 -->
+            <div id="historyTab" class="tab-content">
+                <div class="records-list">
+                    <h2>📚 历史记录</h2>
+                    
+                    <div class="history-controls">
+                        <input type="date" class="date-picker" id="datePicker" onchange="filterByDate()">
+                        <input type="text" class="search-box" id="searchBox" placeholder="搜索记录内容..." oninput="searchHistory()">
+                    </div>
+                    
+                    <div id="historyRecordsContainer"></div>
                 </div>
-                <div id="loading" class="loading" style="display:none;">🔄 AI正在思考中...</div>
             </div>
 
-            <div class="records-list">
-                <h2>📚 今日记录</h2>
-                <div id="recordsContainer"></div>
+            <!-- 月份视图 -->
+            <div id="calendarTab" class="tab-content">
+                <div class="records-list">
+                    <h2>📅 月份视图</h2>
+                    
+                    <div class="month-nav">
+                        <button class="btn btn-secondary" style="width:auto;" onclick="changeMonth(-1)">❮</button>
+                        <div class="month-title" id="monthTitle">2024年1月</div>
+                        <button class="btn btn-secondary" style="width:auto;" onclick="changeMonth(1)">❯</button>
+                    </div>
+                    
+                    <div class="month-view">
+                        <div class="month-day-name">日</div>
+                        <div class="month-day-name">一</div>
+                        <div class="month-day-name">二</div>
+                        <div class="month-day-name">三</div>
+                        <div class="month-day-name">四</div>
+                        <div class="month-day-name">五</div>
+                        <div class="month-day-name">六</div>
+                        <!-- 日期将动态生成 -->
+                    </div>
+                    
+                    <div id="monthRecordsContainer"></div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- 数据信息弹窗 -->
+    <div id="dataModal" class="modal" onclick="event.target.id==='dataModal' && closeModal()">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h3>📊 我的数据</h3>
+            <div class="data-info" id="dataInfo"></div>
+            <button class="btn btn-primary" style="width:100%;" onclick="closeModal()">确定</button>
+        </div>
+    </div>
+
     <script>
+        // Service Worker 注册
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .catch(err => console.log('SW注册失败:', err));
+            });
+        }
+
+        // 全局变量
+        let currentMonth = new Date();
+        let filteredHistory = [];
+
+        // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             loadRecords();
             loadSettings();
+            updateStats();
+            renderMonthView();
         });
 
+        // ==================== 标签切换 ====================
+        function switchTab(tabName) {
+            // 隐藏所有标签
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 显示选中的标签
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+            
+            // 如果切换到历史记录，加载数据
+            if (tabName === 'history') {
+                loadHistoryRecords();
+            } else if (tabName === 'calendar') {
+                renderMonthView();
+            }
+        }
+
+        // ==================== 核心功能 ====================
+
+        // 加载设置
         function loadSettings() {
             const saved = localStorage.getItem('xiaosiSettings');
             window.apiSettings = saved ? JSON.parse(saved) : {
                 apiKey: '',
-                apiModel: 'deepseek',
+                apiModel: 'deepseek-chat',
                 apiUrl: 'https://api.deepseek.com/v1/chat/completions'
             };
         }
 
+        // 保存记录
         function saveRecord() {
             const content = document.getElementById('recordInput').value.trim();
             if (!content) {
@@ -227,7 +666,8 @@
                     hour: '2-digit',
                     minute: '2-digit'
                 }),
-                date: now.toLocaleDateString('zh-CN')
+                date: now.toLocaleDateString('zh-CN'),
+                createdAt: now.toISOString()
             };
 
             const records = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
@@ -236,21 +676,32 @@
 
             document.getElementById('recordInput').value = '';
             loadRecords();
+            updateStats();
+            renderMonthView();
             alert('✅ 记录保存成功！');
         }
 
+        // 清空输入框
         function clearInput() {
             document.getElementById('recordInput').value = '';
         }
 
+        // ==================== 今日记录 ====================
+
+        // 加载今日记录
         function loadRecords() {
-            const container = document.getElementById('recordsContainer');
+            const container = document.getElementById('todayRecordsContainer');
             const records = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
             const today = new Date().toLocaleDateString('zh-CN');
             const todayRecords = records.filter(r => r.date === today);
             
             if (todayRecords.length === 0) {
-                container.innerHTML = '<div class="empty-state"><p>💭 还没有记录呢，开始记录你的想法吧！</p></div>';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>💭 还没有记录呢，开始记录你的想法吧！</p>
+                        <p>所有数据都保存在你的设备上，安全可靠</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -259,7 +710,7 @@
                 html += `
                     <div class="record-item">
                         <div class="record-time">🕐 ${r.timestamp}</div>
-                        <div class="record-content">${r.content}</div>
+                        <div class="record-content">${escapeHtml(r.content)}</div>
                         <div class="record-actions">
                             <button class="record-btn edit-btn" onclick="editRecord(${r.id})">✏️ 编辑</button>
                             <button class="record-btn delete-btn" onclick="deleteRecord(${r.id})">🗑️ 删除</button>
@@ -270,6 +721,245 @@
             container.innerHTML = html;
         }
 
+        // ==================== 历史记录 ====================
+
+        // 加载历史记录
+        function loadHistoryRecords() {
+            const container = document.getElementById('historyRecordsContainer');
+            const records = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
+            
+            if (records.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>📭 还没有历史记录</p>
+                        <p>开始记录，这里会显示你的成长轨迹</p>
+                    </div>
+                `;
+                filteredHistory = [];
+                return;
+            }
+            
+            // 按日期分组
+            const grouped = {};
+            records.forEach(r => {
+                if (!grouped[r.date]) {
+                    grouped[r.date] = [];
+                }
+                grouped[r.date].push(r);
+            });
+            
+            // 按日期排序（最新在前）
+            const dates = Object.keys(grouped).sort((a, b) => {
+                return new Date(b) - new Date(a);
+            });
+            
+            filteredHistory = dates.map(date => ({
+                date: date,
+                records: grouped[date]
+            }));
+            
+            renderHistoryList();
+        }
+
+        // 渲染历史记录列表
+        function renderHistoryList() {
+            const container = document.getElementById('historyRecordsContainer');
+            let html = '';
+            
+            filteredHistory.forEach(item => {
+                html += `
+                    <div class="history-item">
+                        <div class="history-date">📅 ${item.date}</div>
+                `;
+                
+                item.records.forEach(r => {
+                    html += `
+                        <div class="history-record">
+                            <div class="history-time">🕐 ${r.timestamp.split(' ')[1] || r.timestamp}</div>
+                            <div class="history-content">${escapeHtml(r.content)}</div>
+                            <div class="history-actions">
+                                <button class="record-btn view-btn" onclick="viewRecord(${r.id})">👁️ 预览</button>
+                                <button class="record-btn edit-btn" onclick="editRecord(${r.id})">✏️ 编辑</button>
+                                <button class="record-btn delete-btn" onclick="deleteRecord(${r.id})">🗑️ 删除</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 按日期筛选
+        function filterByDate() {
+            const selectedDate = document.getElementById('datePicker').value;
+            if (!selectedDate) {
+                loadHistoryRecords();
+                return;
+            }
+            
+            // 转换为中文日期格式
+            const date = new Date(selectedDate);
+            const formattedDate = date.toLocaleDateString('zh-CN');
+            
+            const allRecords = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
+            const filtered = allRecords.filter(r => r.date === formattedDate);
+            
+            if (filtered.length === 0) {
+                document.getElementById('historyRecordsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <p>📭 这一天没有记录</p>
+                    </div>
+                `;
+                filteredHistory = [];
+                return;
+            }
+            
+            // 按时间排序
+            filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            filteredHistory = [{
+                date: formattedDate,
+                records: filtered
+            }];
+            
+            renderHistoryList();
+        }
+
+        // 搜索历史记录
+        function searchHistory() {
+            const keyword = document.getElementById('searchBox').value.trim().toLowerCase();
+            if (!keyword) {
+                loadHistoryRecords();
+                return;
+            }
+            
+            const allRecords = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
+            const matched = allRecords.filter(r => 
+                r.content.toLowerCase().includes(keyword)
+            );
+            
+            if (matched.length === 0) {
+                document.getElementById('historyRecordsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <p>🔍 没有找到包含 "${keyword}" 的记录</p>
+                    </div>
+                `;
+                filteredHistory = [];
+                return;
+            }
+            
+            // 按日期分组
+            const grouped = {};
+            matched.forEach(r => {
+                if (!grouped[r.date]) {
+                    grouped[r.date] = [];
+                }
+                grouped[r.date].push(r);
+            });
+            
+            // 按日期排序
+            const dates = Object.keys(grouped).sort((a, b) => {
+                return new Date(b) - new Date(a);
+            });
+            
+            filteredHistory = dates.map(date => ({
+                date: date,
+                records: grouped[date]
+            }));
+            
+            renderHistoryList();
+        }
+
+        // ==================== 月份视图 ====================
+
+        // 渲染月份视图
+        function renderMonthView() {
+            const monthView = document.querySelector('.month-view');
+            const monthTitle = document.getElementById('monthTitle');
+            
+            // 更新月份标题
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth() + 1;
+            monthTitle.textContent = `${year}年${month}月`;
+            
+            // 清空日期（保留星期标题）
+            const daysContainer = Array.from(monthView.children).slice(7);
+            daysContainer.forEach(day => day.remove());
+            
+            // 获取当月第一天是星期几
+            const firstDay = new Date(year, currentMonth.getMonth(), 1);
+            const startDay = firstDay.getDay(); // 0=周日, 6=周六
+            
+            // 获取当月天数
+            const lastDay = new Date(year, currentMonth.getMonth() + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            
+            // 获取所有记录的日期
+            const allRecords = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
+            const recordDates = {};
+            allRecords.forEach(r => {
+                recordDates[r.date] = true;
+            });
+            
+            const today = new Date().toLocaleDateString('zh-CN');
+            
+            // 填充日期
+            // 空白占位
+            for (let i = 0; i < startDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'month-day';
+                emptyDay.style.backgroundColor = 'transparent';
+                emptyDay.style.border = 'none';
+                monthView.appendChild(emptyDay);
+            }
+            
+            // 日期
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = new Date(year, currentMonth.getMonth(), day).toLocaleDateString('zh-CN');
+                const dayEl = document.createElement('div');
+                dayEl.className = 'month-day';
+                dayEl.textContent = day;
+                
+                // 标记有记录的日期
+                if (recordDates[dateStr]) {
+                    dayEl.classList.add('has-record');
+                }
+                
+                // 标记今天
+                if (dateStr === today) {
+                    dayEl.classList.add('today');
+                }
+                
+                dayEl.onclick = () => {
+                    document.getElementById('datePicker').value = formatDateForInput(new Date(year, currentMonth.getMonth(), day));
+                    filterByDate();
+                    switchTab('history');
+                };
+                
+                monthView.appendChild(dayEl);
+            }
+        }
+
+        // 改变月份
+        function changeMonth(delta) {
+            currentMonth.setMonth(currentMonth.getMonth() + delta);
+            renderMonthView();
+        }
+
+        // 格式化日期为 input[type=date] 格式
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // ==================== 记录操作 ====================
+
+        // 编辑记录
         function editRecord(id) {
             const records = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
             const record = records.find(r => r.id == id);
@@ -279,20 +969,55 @@
                     record.content = newContent.trim();
                     localStorage.setItem('xiaosiRecords', JSON.stringify(records));
                     loadRecords();
+                    loadHistoryRecords();
+                    updateStats();
+                    renderMonthView();
                     alert('✅ 记录更新成功！');
                 }
             }
         }
 
+        // 删除记录
         function deleteRecord(id) {
             if (!confirm('🗑️ 确定要删除这条记录吗？')) return;
             let records = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
             records = records.filter(r => r.id != id);
             localStorage.setItem('xiaosiRecords', JSON.stringify(records));
             loadRecords();
+            loadHistoryRecords();
+            updateStats();
+            renderMonthView();
             alert('✅ 记录删除成功！');
         }
 
+        // 查看记录（预览）
+        function viewRecord(id) {
+            const records = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
+            const record = records.find(r => r.id == id);
+            if (record) {
+                alert(`📅 日期：${record.date}\n🕐 时间：${record.timestamp}\n\n📝 内容：\n${record.content}`);
+            }
+        }
+
+        // 清空今日记录
+        function clearAllRecords() {
+            if (!confirm('⚠️ 确定要清空今天的所有记录吗？此操作不可恢复！')) return;
+            
+            const today = new Date().toLocaleDateString('zh-CN');
+            let records = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
+            records = records.filter(r => r.date !== today);
+            localStorage.setItem('xiaosiRecords', JSON.stringify(records));
+            
+            loadRecords();
+            loadHistoryRecords();
+            updateStats();
+            renderMonthView();
+            alert('✅ 今日记录已清空！');
+        }
+
+        // ==================== 智能总结 ====================
+
+        // 生成智能总结
         async function generateSummary() {
             const records = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
             const today = new Date().toLocaleDateString('zh-CN');
@@ -321,7 +1046,7 @@ ${recordsText}
 3. 行动建议：（给出1-2个具体的下一步行动建议）`;
 
                 const response = await callAI(prompt);
-                summaryContent.innerHTML = `<p>${response.replace(/\n/g, '<br>')}</p>`;
+                summaryContent.innerHTML = `<p>${escapeHtml(response).replace(/\n/g, '<br>')}</p>`;
             } catch (error) {
                 summaryContent.innerHTML = `<p style="color:#dc3545;">❌ ${error.message}</p>`;
             } finally {
@@ -329,6 +1054,7 @@ ${recordsText}
             }
         }
 
+        // 调用AI API
         async function callAI(prompt) {
             if (!window.apiSettings || !window.apiSettings.apiKey) {
                 throw new Error('请先在设置页面配置API密钥');
@@ -341,8 +1067,11 @@ ${recordsText}
                     'Authorization': `Bearer ${window.apiSettings.apiKey}`
                 },
                 body: JSON.stringify({
-                    model: window.apiSettings.apiModel || 'deepseek',
-                    messages: [{role:'system',content:'你是一个帮助用户分析日记并提供建议的AI助手。'},{role:'user',content:prompt}],
+                    model: window.apiSettings.apiModel || 'deepseek-chat',
+                    messages: [
+                        {role:'system',content:'你是一个帮助用户分析日记并提供建议的AI助手。'},
+                        {role:'user',content:prompt}
+                    ],
                     temperature: 0.7,
                     max_tokens: 1000
                 })
@@ -355,6 +1084,135 @@ ${recordsText}
 
             const data = await res.json();
             return data.choices[0].message.content;
+        }
+
+        // ==================== 导出/导入功能 ====================
+
+        // 导出数据
+        function exportData() {
+            const records = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
+            const settings = JSON.parse(localStorage.getItem('xiaosiSettings') || '{}');
+            
+            const exportData = {
+                version: '1.0',
+                exportedAt: new Date().toISOString(),
+                records: records,
+                settings: settings,
+                totalRecords: records.length
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `小思日记备份-${new Date().toISOString().slice(0,10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            alert(`✅ 备份成功！\n共 ${records.length} 条记录已导出`);
+        }
+
+        // 导入数据
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!data.records) {
+                        alert('❌ 文件格式不正确！');
+                        return;
+                    }
+                    
+                    const oldRecords = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
+                    const newRecordsCount = data.records.length;
+                    const oldRecordsCount = oldRecords.length;
+                    
+                    if (oldRecordsCount > 0) {
+                        if (!confirm(`⚠️ 当前已有 ${oldRecordsCount} 条记录\n导入将覆盖现有数据，确定继续吗？`)) {
+                            return;
+                        }
+                    }
+                    
+                    // 导入记录
+                    localStorage.setItem('xiaosiRecords', JSON.stringify(data.records));
+                    
+                    // 导入设置（可选）
+                    if (data.settings) {
+                        localStorage.setItem('xiaosiSettings', JSON.stringify(data.settings));
+                        loadSettings();
+                    }
+                    
+                    loadRecords();
+                    loadHistoryRecords();
+                    updateStats();
+                    renderMonthView();
+                    
+                    alert(`✅ 导入成功！\n共导入 ${newRecordsCount} 条记录`);
+                    
+                } catch (error) {
+                    alert(`❌ 导入失败：${error.message}`);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // ==================== 统计信息 ====================
+
+        // 更新统计信息
+        function updateStats() {
+            const records = JSON.parse(localStorage.getItem('xiaosiRecords') || '[]');
+            
+            if (records.length === 0) {
+                document.getElementById('statsBar').innerHTML = `
+                    <span>📝 记录: 0条</span>
+                    <span>📅 最早: -</span>
+                    <span>🆕 最新: -</span>
+                `;
+                return;
+            }
+            
+            // 按时间排序
+            records.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            
+            const earliest = records[0];
+            const latest = records[records.length - 1];
+            
+            // 计算活跃天数
+            const dates = new Set(records.map(r => r.date));
+            const activeDays = dates.size;
+            
+            // 格式化日期（只显示月日）
+            const formatDate = (dateStr) => {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+            };
+            
+            document.getElementById('statsBar').innerHTML = `
+                <span>📝 记录: ${records.length}条</span>
+                <span>📅 活跃: ${activeDays}天</span>
+                <span>🆕 ${formatDate(latest.createdAt)}</span>
+            `;
+        }
+
+        // ==================== 工具函数 ====================
+
+        // 防止XSS攻击
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('dataModal').style.display = 'none';
         }
     </script>
 </body>
